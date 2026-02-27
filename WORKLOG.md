@@ -35,26 +35,49 @@ Kelly's activity log for the AWESOMEREE Web App. Entries are organized by work s
 
 ---
 ## AW-357 — Add duplicate submission prevention on Replacement & Review form
-  **Date:** 2026-02-25
-  **Branch:**
-  `fix-add-duplicate-submission-prevention-on-Replacement-&-Review-form-(AW-357)`
 
-  **Frontend:** Added `submitting` state on the Add New form — disables the Create button
-  and shows "Submitting…" while request is in-flight, preventing double-click submissions.
+**Date:** 2026-02-25 to 2026-02-27
+**Status:** Deployed to Production
+**Assignee:** Kelly Ee
+**Reporter:** Agnes Foong
+**Labels:** frontend, backend
 
-  **Backend:** Added `checkRecentDuplicate()` function — checks if a record with the same
-  order_id was created within the last 60 seconds. Returns 409 Conflict if duplicate
-  detected, blocking repeated submissions.
+### Problem
+The Replacement & Review form (`/customer-service/replacement-review`) had no protection against duplicate submissions. When the system was slow, users could double-click the submit button and create identical records (see GRBT-202). Audit log showed two identical records created 1 second apart — classic double-submit.
 
-  **Logging gap:** Already implemented — Firebase auth headers (x-firebase-uid,
-  x-user-email, x-user-name) are passed from the form and captured in history_logs for both
-  create and update actions.
+### What was done
 
-  **Files changed:**
-  - `lib/replacement-review.ts` — added `checkRecentDuplicate()`
-  - `app/api/replacement-review1/route.ts` — added duplicate check before insert
-  - `components/replacement-review1/controls.tsx` — added `submitting` state to prevent
-  double-click
+**1. Frontend — Disable submit button on click**
+- Added `submitting` state on the Add New form — disables the Create button and shows "Submitting…" while request is in-flight
+- Re-enables on error so the user can retry
+- Handles 409 Conflict response and shows user-friendly duplicate warning
+
+**2. Backend — Duplicate order check**
+- Added `checkRecentDuplicate()` function — checks if a record with the same `order_id` was created within the last 60 seconds
+- Returns 409 Conflict if duplicate detected, blocking repeated submissions
+- Implemented atomic duplicate check to prevent TOCTOU race condition (handles concurrent requests)
+
+**3. Logging gap — Firebase auth headers**
+- Passed Firebase auth headers (`x-firebase-uid`, `x-user-email`, `x-user-name`) from the replacement review form
+- Audit logs now capture who created each record in `history_logs` for both create and update actions
+
+### Files changed
+- `lib/replacement-review.ts` — added `checkRecentDuplicate()`
+- `app/api/replacement-review1/route.ts` — added duplicate check before insert
+- `components/replacement-review1/controls.tsx` — added `submitting` state to prevent double-click
+
+### Commits
+- `3576461` — fix-add-duplicate-submission-prevention-on-Replacement-&-Review-form-(AW-357)
+- `edd9480` — fix: atomic duplicate check to prevent TOCTOU race condition (AW-357)
+
+### PRs & Deployment
+- **PR #369**: `kelly/AW-357-duplicate-prevention-and-date-fix` → merged to `test` (Feb 26, 4:34 PM)
+- **PR #364**: `test` → `main` (merged Feb 27, 12:32 AM) — bundled with 25 commits from multiple devs
+- **Deployment issue**: GitHub Actions billing was locked, blocking all deployments after Feb 26 ~4 PM
+- **Resolution**: Billing fixed by Agnes → manually triggered Agent 5 (Build & Deploy Staging) from GitHub Actions
+- **Agent 5** (Run #154): Build (3m 24s) → Deploy to Staging (16m 42s) → Smoke Tests (59s) — all passed
+- **Agent 6** (Run #162): Production Canary Rollout (16m 34s) — 5% → 25% → 50% → 100% traffic — all passed
+- **Live in production**: Feb 27, 2026 ~10:35 AM at https://employee.awesomeree.com.my
 
 
 ### Session 0220-1 (2026-02-20)
