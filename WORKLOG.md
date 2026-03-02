@@ -6,6 +6,42 @@ Kelly's activity log for the AWESOMEREE Web App. Entries are organized by work s
 
 ---
 
+### Session 0302-1 (2026-03-02)
+
+**VVIP Comp Analysis — Bug Fixes, UI Simplification & Variation Count**
+
+- **Context**: Shopee MY VVIP page (`/analytics/table/shopee-my-vvip`) had 3 bugs in competitor variation display + missing features flagged by Agnes. Branch: `fix/vvip-comp-analysis-improvements` → PR to `test`
+- **Bug 1 — Unmatched our_variations dropped (FIXED)**:
+  - Our variations with no matching competitor were silently omitted from the UI
+  - Fix: API now emits blank competitor columns for all unmatched our_variations
+  - File: `app/api/shopee-my-vvip/products/route.ts` (Step 4 in `limitAndDedupCompetitors()`)
+- **Bug 2 — Wrong variation assignment due to generic words (FIXED)**:
+  - "LED Light" (ours) matched to "Brown Set" (comp) because "set" overlapped
+  - Fix: Added `variationsMatchScore()` with `MATCH_STOP_WORDS` (set, pcs, free) and `LOW_SIGNAL_WORDS` (led, mini, pro)
+  - File: `app/api/shopee-my-vvip/products/route.ts`
+- **Bug 4 — Partial comp variations shown (FIXED)**:
+  - BBM Chair showed only 4 Brown variations but DB had 8 (4 Brown + 4 Wood)
+  - Root cause: Per-variation top 3 filter dropped BBM Wood (52 sales) because NIVISON (988 sales) outranked it on the same our_var
+  - Fix: Added optional `backfillProducts` param to `getQualifiedCompRows()` — if a comp product survives top 3 on any variation, ALL its variations are included
+  - Isolation: param defaults to `false`, only VVIP passes `true`. **Shopee MY unaffected**.
+  - Files: `lib/shared/shopee-history-calculations.ts`, `components/Shopee-MY-History/grouped-rows.tsx`, `app/analytics/table/shopee-my-vvip/page.tsx`
+- **UI Simplification — Removed non-functional tabs**:
+  - Agnes flagged 3 missing API routes (status, bulk-status, permanent-delete)
+  - Decision: omit these features for now instead of implementing
+  - Removed Pending/Fixed/Deleted tabs, BulkActionsSheet, DeleteConfirmation, PermanentDeleteConfirmation
+  - Only "Shopee MY" tab remains with styled orange badge
+- **Badge count — Changed to variation count**:
+  - Before: badge showed product count (134)
+  - After: badge shows total our_variations across all product groups (sum of variations)
+  - Uses `groupProducts()` + `useMemo` to compute client-side
+- **Shopee MY impact: ZERO** — verified `git diff main -- app/analytics/table/shopee-my/` returns empty
+- **Branch**: `fix/vvip-comp-analysis-improvements` (cherry-picked from `fix/vvip-competitor-display`)
+- **PR**: Created to `test` branch
+- **Files changed**: `route.ts` (VVIP API), `page.tsx` (VVIP page), `shopee-history-calculations.ts` (shared, safe), `grouped-rows.tsx` (shared, safe)
+- **Tools used**: MySQL direct query, TypeScript compiler, git cherry-pick, GitHub MCP
+
+---
+
 ### Session 0227-1 (2026-02-27)
 
 **Comp Analysis — Parent Category & Grouping Fixes (In Progress)**

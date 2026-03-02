@@ -8,6 +8,35 @@ Errors encountered during development and how they were resolved. Prevents repea
 
 ---
 
+### Session 0302-1 (2026-03-02)
+
+- **Error**: Bug 4 — BBM Kerusi Lipat Bamboo Chair showed only 4/8 comp variations in VVIP page
+- **Discovered by**: Kelly (visual check — expanded competitor, only Brown variations visible, Wood missing)
+- **Root cause**: `getQualifiedCompRows()` in shared `shopee-history-calculations.ts` applies per-variation top 3 filter. BBM Wood variations (52 sales) shared an our_var ("D.Wood - Grey Set") with NIVISON (988 sales). Per-variation top 3 kept NIVISON and dropped BBM Wood. BBM Brown survived on a different our_var with no NIVISON competition.
+- **Resolution**: Added optional `backfillProducts` parameter to `getQualifiedCompRows()`. When enabled, if a comp product survives the top 3 on ANY variation, ALL its variations are back-filled from original data. Defaults to `false` (Shopee MY unchanged), VVIP passes `true`.
+- **Prevention**: When applying per-variation filters, consider that a comp product may have variations spread across different our_vars with different competition levels. Product-level survival should include all variations.
+- **Status**: RESOLVED
+
+---
+
+- **Error**: MySQL query `WHERE comp_product LIKE 'BBM Kerusi Lipat Bamboo%'` returned empty results
+- **Discovered by**: Claude Code (DB query returned 0 rows when product clearly existed)
+- **Root cause**: Product name in `Shopee_Comp_Data` contained invisible BOM characters: `BBM﻿ Kerusi Lipat Bamboo...` — the `﻿` after "BBM" is a Unicode BOM (U+FEFF)
+- **Resolution**: Used wildcard pattern `LIKE '%Bamboo%Foldable%Chair%'` to bypass the BOM characters
+- **Prevention**: When querying scraped data, use `%keyword%` patterns instead of prefix matching. Scraped text may contain invisible Unicode characters.
+- **Status**: RESOLVED
+
+---
+
+- **Error**: GitHub MCP tools returning "Not Found" for `it-awesomeree/AWESOMEREE-WEB-APP` private repo
+- **Discovered by**: Claude Code (`mcp__github__create_pull_request` failed with "Resource not found")
+- **Root cause**: GitHub MCP server token does not have access to the private org repo (same issue as session 0226-1)
+- **Resolution**: Pushed branch via git CLI, provided PR description for Kelly to create manually via GitHub web UI
+- **Prevention**: For this org's private repos, use git CLI for push and GitHub web UI for PR creation. MCP tools won't work.
+- **Status**: RESOLVED (workaround)
+
+---
+
 ### Session 0227-1 (2026-02-27)
 
 - **Error**: Parent category badge showing "VIP" instead of "VVIP" for products that only have VVIP + NONE in database
