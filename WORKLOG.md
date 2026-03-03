@@ -6,6 +6,29 @@ Kelly's activity log for the AWESOMEREE Web App. Entries are organized by work s
 
 ---
 
+### Session 0303-2 (2026-03-03)
+
+**Date Filter Fix — Shopee MY Analytics Table & Comp Analysis**
+
+- **Context**: Product `20525200467` (Swimming Pool Intex) shows 14 unique SKUs without date filter, but only 10 when filtering by March 2. Also investigated comp analysis `date_taken` matching issue.
+- **Root cause**: The scraper inserts new rows with different `date_taken` timestamps each run. Some variations (BW-RSP, INTX530GPH, sheet_name="NONE") were scraped on March 3 while VVIP variations were scraped on March 2. The row-level date filter (`date_taken >= ? AND date_taken <= ?`) excluded cross-date variations.
+- **DB investigation**: Queried `AllBots.Shopee_Comp` — confirmed 50 total rows across 4 dates for this product, 14 unique SKUs. With date filter March 2: only 16 rows / 10 unique SKUs returned (old code). With product-level subquery: 50 rows / 14 unique SKUs (fixed).
+- **Fix 1 — Analytics table** (Shopee MY):
+  - File: `lib/services/shopee-products-repository-mysql.ts` (lines 268-284)
+  - Changed row-level date filter to product-level subquery: `our_link IN (SELECT DISTINCT our_link FROM Shopee_Comp WHERE date_taken >= ? AND date_taken <= ?)`
+  - Frontend `deduplicateCompetitorRows()` (page.tsx line 403) already handles keeping latest data per variation
+- **Fix 2 — Comp analysis analyze API**:
+  - File: `app/api/comp-analysis/analyze/route.ts` (lines 216-284)
+  - Removed `date_taken` exact match from WHERE clause
+  - Added `ROW_NUMBER() OVER (PARTITION BY comp_variation ORDER BY date_taken DESC, id DESC)` for dedup
+  - VVIP not affected (completely separate code)
+- **Additional finding**: "Shopee MY 50" count badge shows raw DB count instead of deduped count — NOT yet fixed
+- **DB note**: MCP tool shows UTC dates (subtract 8h from stored MYT values). `2026-03-01T16:00:00Z` = `2026-03-02 00:00:00 MYT`
+- **Status**: Code done locally, NOT yet committed/pushed/PR'd
+- **Tools used**: MySQL MCP queries, code exploration, plan mode
+
+---
+
 ### Session 0303-1 (2026-03-03)
 
 **VM TT — WhatsApp Screenshot Bot Selector Fix**

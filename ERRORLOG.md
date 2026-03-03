@@ -8,6 +8,19 @@ Errors encountered during development and how they were resolved. Prevents repea
 
 ---
 
+### Session 0303-2 (2026-03-03)
+
+- **Error**: Shopee MY analytics table date filter hides product variations — 14 unique SKUs reduced to 10 when date filter applied
+- **Discovered by**: Kelly (filtered by March 2 on product 20525200467, saw only 10 VVIP SKUs instead of 14)
+- **Root cause**: `shopee-products-repository-mysql.ts` uses row-level date filter (`date_taken >= ? AND date_taken <= ?`). The scraper inserts variations as separate rows with different `date_taken` per scrape run. 4 SKUs (BW-RSP, INTX530GPH with sheet_name="NONE") were scraped on March 3 while VVIP data was scraped March 2. Row-level filter excludes cross-date variations.
+- **Impact**: Users see incomplete variation data when any date filter is active. Also affects comp analysis analyze API (exact `date_taken` match hid competitor variations scraped on different dates).
+- **Resolution**: Changed date filter to product-level subquery: `our_link IN (SELECT DISTINCT our_link FROM Shopee_Comp WHERE date_taken >= ? AND date_taken <= ?)`. Frontend `deduplicateCompetitorRows()` keeps latest data per variation. Also fixed comp analysis analyze API with `ROW_NUMBER()` dedup.
+- **Prevention**: When filtering time-series data with per-row timestamps, use entity-level filters (match the product, then return all its rows) rather than row-level filters, especially when scrapers don't guarantee all variations are scraped simultaneously.
+- **Status**: Code done locally, NOT yet deployed
+- **Note**: DB dates stored in MYT but MCP tool displays UTC (subtract 8h). `2026-03-01T16:00:00Z` in MCP = `2026-03-02 00:00:00` in MySQL.
+
+---
+
 ### Session 0303-1 (2026-03-03)
 
 - **Error**: WhatsApp screenshot bots on VM TT failing with `TimeoutException` — cannot find WhatsApp search box
