@@ -8,6 +8,22 @@ Errors encountered during development and how they were resolved. Prevents repea
 
 ---
 
+### Session 0304-1 (2026-03-04)
+
+- **Error 1**: HTTP 500 — "Column 'our_link' in where clause is ambiguous"
+- **Context**: After changing `GROUP BY product_name` to `GROUP BY our_link`, the rows query's WHERE clause used `our_link IN (...)` without a table prefix
+- **Root cause**: The rows query JOINs `Shopee_Comp sc` with exclusion tables (`pe`, `ve`) that also have an `our_link` column. MySQL couldn't determine which table's column to use.
+- **Resolution**: Added `sc.` prefix → `sc.our_link IN (...)`. The old `product_name IN (...)` never had this issue because exclusion tables don't have a `product_name` column.
+- **Prevention**: When changing column references in queries with JOINs, always check if the new column exists in joined tables. Use table alias prefix (`sc.column`) for safety.
+
+- **Error 2**: HTTP 500 — "productNames is not defined"
+- **Context**: After renaming variable `productNames` to `groupValues`, one reference was missed
+- **Root cause**: Line 1463 still used `productNames.length` after the rename. Only triggered when shop filter was applied (specific code path).
+- **Resolution**: Changed to `groupValues.length`
+- **Prevention**: After renaming a variable, always search the entire file for all remaining references (`grep productNames`). Don't rely on just the lines you changed.
+
+---
+
 ### Session 0303-2 (2026-03-03)
 
 - **Error**: Shopee MY analytics table date filter hides product variations — 14 unique SKUs reduced to 10 when date filter applied

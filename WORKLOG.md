@@ -6,6 +6,34 @@ Kelly's activity log for the AWESOMEREE Web App. Entries are organized by work s
 
 ---
 
+### Session 0304-1 (2026-03-04)
+
+**Fix: Uncategorized product among VVIPs + Cap COMP to top 3**
+
+- **Context**: When sorting by Category with a date filter (March 2, 2026), an Uncategorized product ("Projector Stand Tripod") appeared on page 1 among VVIPs. Two different products shared the same `product_name` but had different `our_link` URLs and categories.
+- **Root cause**: Server paginated by `GROUP BY product_name`, but client groups by `product_id` (from `our_link`). Two products with same name merged into one server group → sorted as VVIP → both placed on page 1. Client split them → one showed Uncategorized among VVIPs.
+- **Fix — `lib/services/shopee-products-repository.ts`**:
+  - Non-summary path: `GROUP BY our_link` instead of `GROUP BY product_name`
+  - All non-summary `orderExpr` tiebreakers: `our_link` instead of `product_name`
+  - Aggregate sort CTE (var_sales, totals, pct, metric): all use `our_link`
+  - Count query: `COUNT(DISTINCT our_link)` instead of `COUNT(DISTINCT product_name)`
+  - Extraction uses `groupCol` variable for summary vs non-summary paths
+  - Added `sc.` prefix to WHERE clause to avoid "ambiguous column" error from exclusion JOINs
+  - Fixed missed `productNames` → `groupValues` rename at line 1463
+- **Fix — `components/Shopee-MY-History/grouped-rows.tsx`**:
+  - Added `.slice(0, 3)` to cap visible COMP products to top 3 by monthly sales
+- **Previous wrong fix**: Pagination badge fix (window function approach) — misdiagnosed as group split across pages, but real issue was two products merging into one group
+- **HTTP 500 errors encountered and fixed**:
+  1. "Column 'our_link' in where clause is ambiguous" — added `sc.` prefix
+  2. "productNames is not defined" — missed variable rename
+- **Branch**: `fix/group-by-ourlink-top3-comp-v2` (created from `main` per PR workflow rules)
+- **PRs created**: PR #1 to `test`, PR #2 to `main` (same branch → both targets)
+- **DB investigation**: Queried "Luxbin Dustbin" product — 17 variations VVIP on March 2, 35 variations NONE on March 3. Mixed sheet_names across scrape dates.
+- **Tools used**: MySQL MCP queries, Chrome DevTools (network 500 debugging), code editing, GitHub push
+- **Status**: PRs created, waiting for CI checks and Agnes's approval
+
+---
+
 ### Session 0303-2 (2026-03-03)
 
 **Date Filter Fix — Shopee MY Analytics Table & Comp Analysis**
