@@ -27,7 +27,12 @@ Kelly's activity log for the AWESOMEREE Web App. Entries are organized by work s
   - Previously NONE rows had stale sales data because the UPDATE's WHERE excluded them
 - **Investigation**: Verified variation counts for multiple products (Knitted Vest item 25900367485, MOF Exclusive MFLC012, Dustbin, LANFY truck) comparing DB vs UI
 - **Tools used**: MySQL queries, VM3 bot script edit, code editing, TypeScript
-- **Status**: Code committed locally on `DATE-KELLY`, not yet pushed/PR'd
+- **Branches & PRs**:
+  - `fix/date-filter-all-variations-v2` (from `test`) → PR to `test` (staging validation)
+  - `fix/date-filter-all-variations` (from `main`) → PR to `main` (production deploy)
+  - Both have same 3 commits, cherry-picked from `DATE-KELLY`
+  - AI checks running, waiting for Agnes's approval
+- **Status**: Both PRs created, pending review
 
 ---
 
