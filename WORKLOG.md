@@ -6,6 +6,31 @@ Kelly's activity log for the AWESOMEREE Web App. Entries are organized by work s
 
 ---
 
+### Session 0305-1 (2026-03-05)
+
+**Fix: Date Filter Hiding Variations + Comp Variation Backfill**
+
+- **Branch**: `DATE-KELLY` (3 commits: `89ee6dc`, `12dd905`, `8dadbd1`)
+- **Context**: Two related issues:
+  1. Date filter hid product variations scraped on different dates (e.g., Luxbin 41 variations → only 12 when filtering March 4, because NONE records from listing-to-db bot had different `date_taken`)
+  2. Competitor product variations dropped by top-3 per-variation filter (e.g., MOF Exclusive showed 3/4 variations, Dustbin showed 12/13)
+- **Fix 1 — Date filter** (`lib/services/shopee-products-repository.ts`):
+  - Names query (pagination) keeps date filter → determines WHICH products to show
+  - Rows query skips date filter via `whereSqlRowsExpanded` → returns ALL active variations
+  - All other filters (shop, sheet_name, status, search) preserved in both queries
+  - First version used subquery (`our_link IN (SELECT ...)`) — too slow on unindexed TEXT column. Second version splits WHERE clauses — fast.
+- **Fix 2 — Comp backfill** (`lib/shared/shopee-history-calculations.ts`):
+  - Added step 1.5 to `getQualifiedCompRows()`: if a competitor product survives top-3 on ANY our_variation, ALL its comp_variations are backfilled from original data
+  - Fixes cases like MOF Pink (4th ranked on "Gingham-Pink" but survives on Green/Blue/Black), Dustbin "20L-Silver", Miss Jan "S,red"
+- **VM3 bot fix** (`Shopee-mylinks-sales-data-merged.py`):
+  - Added `c.sheet_name = '{NONE_SHEET_NAME}'` to `sheet_date_condition` so NONE rows get SiteGiant `our_sales_7d/14d/30d` updates daily
+  - Previously NONE rows had stale sales data because the UPDATE's WHERE excluded them
+- **Investigation**: Verified variation counts for multiple products (Knitted Vest item 25900367485, MOF Exclusive MFLC012, Dustbin, LANFY truck) comparing DB vs UI
+- **Tools used**: MySQL queries, VM3 bot script edit, code editing, TypeScript
+- **Status**: Code committed locally on `DATE-KELLY`, not yet pushed/PR'd
+
+---
+
 ### Session 0304-2 (2026-03-04)
 
 **Add Shopee SG Comp Analysis Page**
