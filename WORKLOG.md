@@ -6,6 +6,31 @@ Kelly's activity log for the AWESOMEREE Web App. Entries are organized by work s
 
 ---
 
+### Session 0306-2 (2026-03-06)
+
+**Fix: CI Test Failures + PRs for SKU Dedup / 0-Sales / Latest Date Scraped / Category Variations**
+
+- **Context**: Previous session created 4 commits across branches (SKU dedup, 0-sales comps, latest date scraped, category variations). CI failed on PR #493 — 2 tests in `shopee-history-calculations.test.ts` expected old behavior (filtering out 0-sales comps) but code intentionally removed that filter.
+- **Fix — CI tests** (`lib/shared/shopee-history-calculations.test.ts`):
+  - "filters out rows with monthlySales = 0" → renamed to "includes rows with monthlySales = 0", expects 2 results instead of 1
+  - "filters out rows with monthlySales = null or undefined" → renamed to "includes rows with monthlySales = null or undefined", expects 3 results instead of 1
+- **Branch management**:
+  - `fix/dup-var-and-date-scraped-main` (from `main`) — added test fix commit `3ccfd47`, pushed to origin
+  - `fix/dup-var-and-date-scraped` (from `test`) — deleted old branch, recreated from `test`, cherry-picked all 5 commits, force-pushed to origin. PR #493 updated.
+- **Commits (5 per branch)**:
+  1. `1ec6c30` / `6df9433` — SKU dedup (use SKU as variation key)
+  2. `fd236fe` / `50c4cc9` — show 0-sales competitors in UI
+  3. `afd24e3` / `85c4943` — show only latest scrape date competitors (LEFT JOIN subquery)
+  4. `134050d` / `36da034` — keep all variations with same category
+  5. `3ccfd47` / `01f2f02` — fix CI tests to match new behavior
+- **PRs**:
+  - `fix/dup-var-and-date-scraped` → PR to `test` (PR #493, updated via force-push)
+  - `fix/dup-var-and-date-scraped-main` → PR to `main` (created manually by Kelly)
+- **Tools used**: Git cherry-pick, force-push, code editing
+- **Status**: Both PRs created, pending CI checks and Agnes's approval
+
+---
+
 ### Session 0305-1 (2026-03-05)
 
 **Fix: Date Filter Hiding Variations + Comp Variation Backfill**

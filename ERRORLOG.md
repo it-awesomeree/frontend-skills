@@ -8,6 +8,17 @@ Errors encountered during development and how they were resolved. Prevents repea
 
 ---
 
+### Session 0306-2 (2026-03-06)
+
+- **Error**: CI tests failing — "filters out rows with monthlySales = 0" expected length 1, got 2; "filters out rows with monthlySales = null or undefined" expected length 1, got 3
+- **Discovered by**: GitHub Actions CI on PR #493
+- **Root cause**: Code intentionally removed the `> 0` filter in `getQualifiedCompRows()` (commit `fd236fe`) so competitors with 0/null/undefined monthly sales are now included. Tests still expected old filtering behavior.
+- **Resolution**: Updated 2 tests to expect new behavior — renamed test descriptions and changed expected lengths (commit `3ccfd47`)
+- **Prevention**: When changing business logic that has test coverage, always update the corresponding tests in the same commit or follow-up commit before pushing.
+- **Status**: RESOLVED
+
+---
+
 ### Session 0304-2 (2026-03-04)
 
 - **Error**: Cherry-pick from `test`-based branch onto `main`-based branch causes massive conflicts
