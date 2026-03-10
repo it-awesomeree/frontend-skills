@@ -6,6 +6,33 @@ Kelly's activity log for the AWESOMEREE Web App. Entries are organized by work s
 
 ---
 
+### Session 0310-3 (2026-03-10)
+
+**Feat: VVIP Variation Pairing via Shopee_Variation_Match Table**
+
+- **Context**: Replace real-time word-overlap variation matching with pre-computed bot matches from `webapp_test.Shopee_Variation_Match`. Also fix trailing slash URL mismatch breaking comp data JOIN.
+- **Branch**: `feature/vvip-variation-match-table` → PR to `test`
+- **Changes**:
+  - `app/api/shopee-my-vvip/products/route.ts`:
+    - Added `normalizeLink()` helper — strips trailing slashes for consistent URL key matching
+    - Added `fetchVariationMatches()` — queries `Shopee_Variation_Match` (rank=1, MATCH/UNSURE, status=active), returns lookup map keyed by `ourLink\0ourVar\0compLink`
+    - Step 3 rewritten: only pairs our_var ↔ comp_var using bot match table. No round-robin, no word-scoring fallback. Unmatched variations stay blank.
+    - Removed all word-matching code: `MATCH_STOP_WORDS`, `LOW_SIGNAL_WORDS`, `extractWords()`, `variationsMatchScore()`, `variationsMatch()`, round-robin Pass 2
+  - `lib/services/shopee-vvip-products-repository.ts`:
+    - SQL JOIN uses `TRIM(TRAILING '/' FROM ...)` on both sides to handle trailing slash mismatches (e.g., product 20525200467 had comp data with trailing `/` but product table without)
+- **UI behavior**:
+  - Top 3 comp products always show (Step 1 unchanged)
+  - All our variations always show (Step 4 unchanged)
+  - Our variation expand: 0–3 comp variations, only bot-confirmed matches
+  - If bot hasn't matched → blank (no expand arrow)
+- **Scope**: VVIP page only. SG and Shopee MY untouched.
+- **Bug found during dev**: Product 20525200467 showed "0 COMP" — root cause was trailing slash mismatch in SQL JOIN (Shopee_Comp_Data had trailing `/`, Shopee_My_Products didn't). Fixed with TRIM.
+- **Bug found during dev**: Product 23028416061 showed "0 COMP" after initial implementation — Strategy A (bot matching) emitted nothing when bot marked all variations as NO_MATCH. Fixed by ensuring comp products always appear (Steps 1/2 unchanged), only variation-level pairing uses bot data.
+- **PR**: Branch pushed. GitHub MCP failed (private repo). PR URL: https://github.com/it-awesomeree/AWESOMEREE-WEB-APP/pull/new/feature/vvip-variation-match-table
+- **Tools used**: MySQL MCP queries, git, code editing
+
+---
+
 ### Session 0310-2 (2026-03-10)
 
 **Fix: Test Failure + PR to main — SP Sales Value Sort, Comp Dedup, Per-Product Ranking**

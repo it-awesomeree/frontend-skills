@@ -8,6 +8,35 @@ Errors encountered during development and how they were resolved. Prevents repea
 
 ---
 
+### Session 0310-3 (2026-03-10)
+
+- **Error**: Product 20525200467 showing "0 COMP" despite having 16 comp rows in DB
+- **Discovered by**: Kelly (visual check on VVIP page)
+- **Root cause**: Trailing slash mismatch — `Shopee_My_Products.our_link` = `.../20525200467` (no slash), `Shopee_Comp_Data.our_link` = `.../20525200467/` (trailing slash). SQL JOIN used exact match → no join → 0 comps. 1,102 rows in Shopee_Comp_Data had trailing slashes.
+- **Resolution**: Changed SQL JOIN in `shopee-vvip-products-repository.ts` to `TRIM(TRAILING '/' FROM cd.our_link) = TRIM(TRAILING '/' FROM mp.our_link)`. Also added `normalizeLink()` helper in API route for consistent URL key matching.
+- **Prevention**: When JOINing on URL columns from different scraper sources, always normalize (trim trailing slashes) since different bots may store URLs with or without trailing `/`.
+- **Status**: RESOLVED
+
+---
+
+- **Error**: Products showing "0 COMP" after implementing Strategy A (bot-driven matching) when bot marked all variations as NO_MATCH
+- **Discovered by**: Claude Code (testing product 23028416061 — 207 rows all NO_MATCH in Shopee_Variation_Match)
+- **Root cause**: Initial Strategy A implementation only emitted rows for MATCH/UNSURE. When bot said NO_MATCH for every variation, Pass 1 found nothing and there was no Pass 2 (round-robin was removed). Result: 0 comp rows emitted → "0 COMP" badge.
+- **Resolution**: Restructured logic — bot matching only controls which our_var a comp_var pairs with (Step 3). Steps 1/2/4 (top 3 selection, row collection, blank rows) stay unchanged and always emit comp products. Final version: removed round-robin entirely per Kelly's request — only bot-confirmed matches show under our variation expand.
+- **Prevention**: When replacing matching logic, ensure it only affects the pairing decision, not whether comp products appear at all. Top 3 comp display should be independent of variation-level matching.
+- **Status**: RESOLVED
+
+---
+
+- **Error**: GitHub MCP `create_pull_request` returns "Not Found" for private repo (recurring)
+- **Context**: Attempted `mcp__github__create_pull_request` for `it-awesomeree/awesomeree-web-app` and `it-awesomeree/AWESOMEREE-WEB-APP`
+- **Root cause**: Same recurring issue — MCP GitHub token lacks access to private org repos
+- **Resolution**: Provided manual PR creation URL for Kelly
+- **Prevention**: For `it-awesomeree` private repos, always use GitHub web UI for PR creation
+- **Status**: RESOLVED (workaround — recurring)
+
+---
+
 ### Session 0310-2 (2026-03-10)
 
 - **Error**: CI test "caps tie expansion at 10 even when all have same sales" failing — expected 10, got 15
