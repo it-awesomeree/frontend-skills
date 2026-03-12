@@ -5,6 +5,29 @@ Kelly's activity log for the AWESOMEREE Web App. Entries are organized by work s
 **Session ID Convention**: Use `MMDD-N` format (e.g., `0219-1`) where MMDD is the date and N is the session number for that day.
 
 ---
+### Session 0312-1 (2026-03-12)
+
+**Fix/Review: SG + VVIP parity hardening and PR scope cleanup**
+
+- **Repo/branch**: `awesomeree-web-app` on `codex/vvip-sg-from-test`
+- **Implemented priority fixes**:
+  - Normalized variation match lookup URL in SG/VVIP query with `TRIM(TRAILING '/' FROM our_link)`
+  - Normalized product grouping key usage with `ourProductKey(...)` in SG/VVIP post-processing
+  - Aligned grouped/ungrouped counts with active filter scope (including `cd.*` filters) using joined count paths and `COUNT(DISTINCT mp.id)`
+- **Kept intended scope**:
+  - `fix(vvip): align grouped count with date filters` remains reverted by `59de019`
+  - `fix: rehydrate cached product details after MY/SG table reload` is not included in this branch
+- **Scope cleanup for PR-to-main**:
+  - Removed `migrations/allbots/atlas.sum` from main diff via `899c201`
+- **Validation**:
+  - `npm run build` passed
+  - Targeted `eslint` passed for modified SG/VVIP route/repository files
+- **PR status**:
+  - Branch pushed (`c1a5450`, `899c201`), PR creation via MCP blocked by auth error
+- **Tools used**: git, npm build, eslint, diff/code review
+
+---
+
 ### Session 0311-1 (2026-03-11)
 
 **Feat: Adding the similarity features inside the VVIP Pgae**
@@ -529,3 +552,4 @@ The Replacement & Review form (`/customer-service/replacement-review`) had no pr
   - `2492fa2` — make improvement on the chatbots (half way done)
   - `a031942` — add on the pagination inside the bottom
 - **Remaining TODO**: Connection pooling (`dbPool.executeWithRetry()`), auto-scroll to latest message, column sorting, product context display, mark as resolved action, real-time updates / auto-refresh
+

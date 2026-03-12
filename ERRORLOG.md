@@ -7,6 +7,35 @@ Errors encountered during development and how they were resolved. Prevents repea
 **Session ID Convention**: Use `MMDD-N` format (e.g., `0219-1`) matching WORKLOG sessions.
 
 ---
+### Session 0312-1 (2026-03-12)
+
+- **Error**: `apply_patch` repeatedly failed with exit code 1 and no output while patching SG/VVIP files
+- **Discovered by**: Claude Code during implementation
+- **Root cause**: Tool-level patch application issue in this environment for these file edits
+- **Resolution**: Switched to targeted PowerShell in-place edits and validated with `git diff` + build/lint
+- **Prevention**: If `apply_patch` fails twice with no diagnostics, switch early to deterministic scripted replacements and re-verify exact line-level diff
+- **Status**: RESOLVED
+
+---
+
+- **Error**: GitHub MCP `create_pull_request` failed with `Authentication Failed: Bad credentials`
+- **Discovered by**: Claude Code when creating PR for `codex/vvip-sg-from-test -> main`
+- **Root cause**: Missing/invalid GitHub MCP token for this session
+- **Resolution**: Provided manual compare/PR URL and proceeded with branch push only
+- **Prevention**: Refresh MCP GitHub token (`GITHUB_MCP_TOKEN`) before PR creation steps
+- **Status**: UNRESOLVED (token still needs update)
+
+---
+
+- **Error**: Agent 1 CI run (`anthropics/claude-code-action`) exited with code 1
+- **Discovered by**: User from GitHub Actions log screenshot
+- **Root cause**: Likely CLI auth/context issue in Agent 1 step while invoking `gh pr ...` from Claude action (workflow does not explicitly provide `GH_TOKEN` to that step)
+- **Resolution**: Investigated workflow and provided recommended patch (add `env: GH_TOKEN/GITHUB_TOKEN` and `github_token` input). Not applied yet per user direction.
+- **Prevention**: Ensure Claude action steps that execute `gh` commands always receive explicit GitHub auth env/input
+- **Status**: UNRESOLVED (workflow unchanged)
+
+---
+
 
 ### Session 0310-3 (2026-03-10)
 
@@ -352,3 +381,4 @@ Errors encountered during development and how they were resolved. Prevents repea
 - **Status**: [RESOLVED / UNRESOLVED — include commit hash if resolved]
 
 -->
+
