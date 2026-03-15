@@ -7,6 +7,16 @@ Errors encountered during development and how they were resolved. Prevents repea
 **Session ID Convention**: Use `MMDD-N` format (e.g., `0219-1`) matching WORKLOG sessions.
 
 ---
+### Session 0315-1 (2026-03-15)
+
+- **Error**: MySQL Workbench "Unknown File Encoding" dialog pops up on every launch
+- **Discovered by**: Kelly (visual popup)
+- **Root cause**: Corrupted autosave scratch file (`awe350-2.autosave\{534F05C6-...}.scratch`) not UTF-8 encoded
+- **Resolution**: Delete the folder `C:\Users\User\AppData\Roaming\MySQL\Workbench\sql_workspaces\awe350-2.autosave\` while Workbench is fully closed
+- **Prevention**: N/A — autosave corruption is rare/random
+- **Status**: PENDING (Workbench still open, locking the files — close Workbench and delete manually)
+
+---
 ### Session 0312-1 (2026-03-12)
 
 - **Error**: `apply_patch` repeatedly failed with exit code 1 and no output while patching SG/VVIP files

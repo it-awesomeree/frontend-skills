@@ -5,6 +5,17 @@ Kelly's activity log for the AWESOMEREE Web App. Entries are organized by work s
 **Session ID Convention**: Use `MMDD-N` format (e.g., `0219-1`) where MMDD is the date and N is the session number for that day.
 
 ---
+### Session 0315-1 (2026-03-15)
+
+**Fix: MySQL Workbench corrupted autosave dialog**
+
+- MySQL Workbench showed "Unknown File Encoding" popup on every launch
+- Root cause: corrupted autosave scratch file at `AppData\Roaming\MySQL\Workbench\sql_workspaces\awe350-2.autosave\`
+- Fix: delete the corrupted autosave folder (blocked by lock files — Workbench needs to be closed first)
+- No database/schema/data impact — purely a local Workbench UI cache file
+- **Status**: Partially done — folder deletion blocked because Workbench still running
+
+---
 ### Session 0312-1 (2026-03-12)
 
 **Fix/Review: SG + VVIP parity hardening and PR scope cleanup**
