@@ -5,6 +5,25 @@ Kelly's activity log for the AWESOMEREE Web App. Entries are organized by work s
 **Session ID Convention**: Use `MMDD-N` format (e.g., `0219-1`) where MMDD is the date and N is the session number for that day.
 
 ---
+### Session 0316-1 (2026-03-16)
+
+**Investigation: test vs main branch differences for Shopee VVIP/SG**
+
+- **Repo/branch**: `awesomeree-web-app`
+- **Investigation scope**: Compared commits on `test` branch (yesterday, Mar 13-14) with `main` branch commit `7aaeee62` (#574) for `shopee-vvip-products-repository.ts` and `shopee-sg-products-repository.ts`
+- **Key findings**:
+  1. **JOIN method**: `main` uses slow TRIM-based JOIN (22+ min, HTTP 500 timeout), `test` uses fast IN match (seconds). Both return identical data.
+  2. **spSalesValue formula mismatch**: `main` uses `shopee_var_value` (real Shopee revenue), `test` uses `sales × price` (multiplication). 445/1,953 rows (23%) differ for 30d. Main is more accurate. VVIP + SG affected, Shopee MY normal page is fine on both.
+  3. **SG JOIN**: Identical on both branches — uses `item_id` numeric JOIN (no issue).
+  4. Discussed 3 JOIN approaches: TRIM (worst), IN match (good), item_id (best). Recommended item_id for VVIP MY long-term.
+- **Branch created**: `fix/vvip-in-join-and-hide-none` (based on `main`)
+  - Applied IN match JOIN fix for VVIP MY (Approach 2)
+  - Applied hide pure-NONE products logic to all 3 pages (Shopee MY, SG, VVIP)
+  - 3 files changed, 126 additions
+  - Pushed to remote, PR description drafted
+- **Pending**: spSalesValue formula fix not included in this branch (separate concern, saved to memory)
+
+---
 ### Session 0315-1 (2026-03-15)
 
 **Fix: MySQL Workbench corrupted autosave dialog**
