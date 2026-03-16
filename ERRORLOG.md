@@ -7,6 +7,21 @@ Errors encountered during development and how they were resolved. Prevents repea
 **Session ID Convention**: Use `MMDD-N` format (e.g., `0219-1`) matching WORKLOG sessions.
 
 ---
+### Session 0316-3 (2026-03-16)
+
+**Error: COMP product details misaligned with column headers**
+- **Symptom**: When expanding product → MY variation → leaf rows, comp product name appeared under MY Product column instead of COMP Product column
+- **Root cause**: `grouped-rows.tsx` passed `visibleCols={{ ...v, category: false }}` to leaf `ProductRow`. This removed the category cell from the CSS grid, shifting ALL subsequent cells left by the category column width (~160px + gap). Header and other rows still rendered category cell → misalignment.
+- **Fix**: Changed to `visibleCols={v}` to keep category cell in grid. Added `{!hideMyName && ...}` in ProductRow to hide category content (VVIP badge) on leaf rows while preserving the cell for alignment.
+- **Prevention**: When hiding columns in grid layouts, hide the CONTENT not the CELL. Removing a cell from a CSS grid shifts all subsequent cells. Use empty spacer cells instead.
+
+**Error: Date filter showing MM/DD/YYYY instead of DD/MM/YYYY**
+- **Symptom**: Date range picker button showed US format (e.g., "3/9/2026")
+- **Root cause**: `toLocaleDateString()` without locale argument defaults to browser locale (US = M/D/YYYY)
+- **Fix**: Created `formatDate()` helper using `padStart(2,'0')` for DD/MM/YYYY format
+- **Prevention**: Never use `toLocaleDateString()` without explicit locale. Use custom formatters for consistent date display.
+
+---
 ### Session 0315-1 (2026-03-15)
 
 - **Error**: MySQL Workbench "Unknown File Encoding" dialog pops up on every launch

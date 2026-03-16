@@ -5,6 +5,20 @@ Kelly's activity log for the AWESOMEREE Web App. Entries are organized by work s
 **Session ID Convention**: Use `MMDD-N` format (e.g., `0219-1`) where MMDD is the date and N is the session number for that day.
 
 ---
+### Session 0316-3 (2026-03-16)
+
+**Review: REMOVE-UNWANTED-COLUMN-IN-COMP-1-AND-2 branch**
+
+- **Repo/branch**: `awesomeree-web-app` / `REMOVE-UNWANTED-COLUMN-IN-COMP-1-AND-2`
+- **Task 1 — Column removal audit**: Verified 7 columns cleanly removed from UI across 10 files (3 page files, 3 API client files, 4 shared components). Columns: Visitors, Conversion Rate, ROAS, Ads Spend, Similarity, Similarity Reason, Date Compared. Plus "Advertising" column group header removed. Backend/repository files intentionally NOT touched (data still fetched, just not displayed).
+- **Task 2 — Date format fix**: Changed `date-range-picker.tsx` from `toLocaleDateString()` (US locale: M/D/YYYY) to custom `formatDate()` outputting DD/MM/YYYY. Shared component — applies to all 3 pages automatically.
+- **Task 3 — COMP alignment fix**: Found root cause of comp product details misalignment. `grouped-rows.tsx` line 2209 passed `visibleCols={{ ...v, category: false }}` to leaf `ProductRow`, removing the category cell from the grid and shifting all subsequent cells (including COMP Product) left by ~180px. Fixed by passing `visibleCols={v}` instead.
+- **Task 4 — Category badge on leaf rows**: After alignment fix, VVIP badge appeared redundantly on leaf rows. Proposed and applied fix: keep category cell rendered (for alignment) but conditionally hide content with `{!hideMyName && <span>...</span>}`. **Note**: `product-row.tsx` was later reverted by user/linter — this fix and the column removal in product-row.tsx were undone.
+- **Task 5 — HTTP 500 on VVIP/SG**: Investigated. API route files (`app/api/`) were NOT changed in this branch. Server-side repo files still reference the columns (DB columns still exist). 500 error appeared intermittent — page loaded fine on subsequent attempts. May be dev server cold-start compilation delay.
+- **Files changed by Claude**: `date-range-picker.tsx` (date format), `grouped-rows.tsx` (alignment fix)
+- **Status**: Not committed. `product-row.tsx` reverted externally.
+
+---
 ### Session 0316-2 (2026-03-16)
 
 **Fix: Apply hide-NONE + spSalesValue sort fix to VVIP/SG on test branch**
