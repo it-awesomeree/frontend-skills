@@ -12,6 +12,7 @@ Each session log captures:
 ## Session Logs
 | Date | File | Summary |
 |------|------|---------|
+| 2026-03-10 | [2026-03-10-similarity-investigation.md](2026-03-10-similarity-investigation.md) | VVIP similarity investigation — compared Shopee MY vs VVIP logic, DB schema, bot scripts (VM3 vs VM TT), identified Option A (quick) vs Option B (full parity) |
 | 2026-03-06 | [2026-03-06-similarity-vvip-sg.md](2026-03-06-similarity-vvip-sg.md) | Similarity scoring & exclusion support for VVIP and SG pages — full implementation (scores + exclusions read/write + API route) |
 | 2026-03-06 | [2026-03-06-fix-dup-var.md](2026-03-06-fix-dup-var.md) | Fix duplicate variations by SKU dedup + show 0-sales competitors in UI |
 | 2026-03-04 | [2026-03-04-shopee-sg-comp-analysis.md](2026-03-04-shopee-sg-comp-analysis.md) | Shopee SG Comp Analysis — new page reusing VVIP repo with region param, VVIP isolated with region=MY |

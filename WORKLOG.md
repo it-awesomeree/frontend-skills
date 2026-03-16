@@ -5,6 +5,21 @@ Kelly's activity log for the AWESOMEREE Web App. Entries are organized by work s
 **Session ID Convention**: Use `MMDD-N` format (e.g., `0219-1`) where MMDD is the date and N is the session number for that day.
 
 ---
+### Session 0316-2 (2026-03-16)
+
+**Fix: Apply hide-NONE + spSalesValue sort fix to VVIP/SG on test branch**
+
+- **Repo/branch**: `awesomeree-web-app`
+- **Branch**: `fix/vvip-hide-pure-none-on-categorized-days` (based on `test`)
+- **Changes**:
+  1. **Hide pure-NONE products on VVIP page**: Applied same logic from PR #592 (already on MY + SG) to `shopee-vvip-products-repository.ts`. When date filter active + non-NONE categories exist → hide pure-NONE products at parent level.
+  2. **spSalesValue sort formula fix**: VVIP + SG on `test` were using `SUM(sales × price)` for sorting, while `main` already had `SUM(CASE WHEN shopee_var_value > 0 THEN shopee_var_value ELSE sales × price END)`. Applied the `main` formula to both files on `test`.
+- **Files changed**: `shopee-vvip-products-repository.ts`, `shopee-sg-products-repository.ts`
+- **PR**: Created and pushed to `fix/vvip-hide-pure-none-on-categorized-days` → `test`
+- **Verification**: Confirmed all 3 pages (MY, VVIP, SG) now have both fixes on `test` branch
+- **Also verified**: Kelly's branch `fix/vvip-in-join-and-hide-none` (based on `main`) has Fix 1 correctly applied to all 3 pages
+
+---
 ### Session 0316-1 (2026-03-16)
 
 **Investigation: test vs main branch differences for Shopee VVIP/SG**
