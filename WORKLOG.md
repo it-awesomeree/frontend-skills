@@ -5,6 +5,26 @@ Kelly's activity log for the AWESOMEREE Web App. Entries are organized by work s
 **Session ID Convention**: Use `MMDD-N` format (e.g., `0219-1`) where MMDD is the date and N is the session number for that day.
 
 ---
+### Session 0317-1 (2026-03-17)
+
+**Fix: HTTP 500 on VVIP/SG + Column Cleanup + Column Reorder**
+
+- **Repo/branch**: `awesomeree-web-app`
+- **Root cause investigation**: VVIP and SG comp analysis pages returned HTTP 500. Traced to DB migration already dropping 22 columns (ads_spend, roas, ads_visitors, ads_conv_rate for 7d/30d/90d + all similarity/exclusion columns) from `Shopee_My_Products`, `Shopee_Comp_Data`, `Shopee_Comp` — but SQL queries still referenced them.
+- **Branch `fix/remove-dropped-db-columns`** (→ test): Removed all dropped column refs from 3 repository files, 3 API routes, enrichment, types, shared calculations. -361 lines. PR created.
+- **Branch `fix/column-group-reorder`** (→ test):
+  1. Moved MY Stock from Sales → Inventory group (right of Lost Value)
+  2. Moved SiteGiant Sales from Inventory → Sales group (first column)
+  3. Renamed "Sales & Shopee" → "Sales"
+  4. Deleted dead files: `lib/utils/similarity.ts`, 3 similarity-exclusion API routes
+  5. Removed exclusion CRUD functions from 3 repos (-1830 lines)
+  6. Removed dead exclusion handlers from 3 page files (-102 lines)
+- **Branch `fix/column-reorder-and-cleanup-v2`** (→ test): Cherry-picked all fixes + cell rendering order fix (stockMy before salesMy in table-header, grouped-rows, product-row). Cleaned stale comments and sortKey types from api.ts files. Restored derived table JOIN for VVIP MY.
+- **Branch `fix/consolidated-column-cleanup`** (→ main): Same fixes cherry-picked to main, with IN match JOIN (correct for main).
+- **Key learning**: `COLUMN_GROUPS` in table-header.tsx only controls the colored header bar grouping. The actual cell rendering order is hardcoded in grouped-rows.tsx (4 locations) and product-row.tsx (1 location) — both must be updated to match.
+- **Status**: Both PRs pushed, ready for review.
+
+---
 ### Session 0316-3 (2026-03-16)
 
 **Review: REMOVE-UNWANTED-COLUMN-IN-COMP-1-AND-2 branch**

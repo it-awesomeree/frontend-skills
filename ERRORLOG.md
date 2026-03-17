@@ -7,6 +7,22 @@ Errors encountered during development and how they were resolved. Prevents repea
 **Session ID Convention**: Use `MMDD-N` format (e.g., `0219-1`) matching WORKLOG sessions.
 
 ---
+### Session 0317-1 (2026-03-17)
+
+**Error: HTTP 500 on VVIP and SG comp analysis pages**
+- **Symptom**: Opening Shopee MY VVIP or SG pages returned HTTP 500. Shopee MY worked.
+- **Root cause**: DB migration had already dropped 22 columns (ads_spend_7d/30d/90d, roas_7d/30d/90d, ads_visitors_7d/30d/90d, ads_conv_rate_7d/30d/90d, ads_metrics_last_synced, all similarity/exclusion columns) from 3 tables. But the SQL SELECT queries in `shopee-vvip-products-repository.ts`, `shopee-sg-products-repository.ts`, and `shopee-products-repository.ts` still referenced them → MySQL "Unknown column" error → catch block returned HTTP 500.
+- **Why Shopee MY appeared to work**: Likely cached result or timing. All 3 repos had the same issue.
+- **Fix**: Removed all references to dropped columns from SELECT clauses, sort maps, enrichment function, Product type, and shared calculations. -361 lines across 9 files.
+- **Prevention**: When running a DB migration to drop columns, always update the application code in the SAME PR/branch. Never drop columns without removing code references first.
+
+**Error: Column reorder only changed header group, not cell rendering**
+- **Symptom**: After changing `COLUMN_GROUPS` in table-header.tsx, the colored group headers showed correct grouping but MY Stock and SiteGiant Sales cells were still in the old positions.
+- **Root cause**: `COLUMN_GROUPS` only controls the colored header bar span. The actual cell rendering order is hardcoded in `grouped-rows.tsx` (4 separate render locations) and `product-row.tsx` (1 location). These must be updated independently.
+- **Fix**: Moved `stockMy` cell div before `salesMy` cell div in all 5 render locations across 2 files, plus the header cell in table-header.tsx.
+- **Prevention**: When reordering columns, update 3 places: (1) `COLUMN_GROUPS` for group headers, (2) `table-header.tsx` for column headers, (3) `grouped-rows.tsx` + `product-row.tsx` for data cells.
+
+---
 ### Session 0316-3 (2026-03-16)
 
 **Error: COMP product details misaligned with column headers**
