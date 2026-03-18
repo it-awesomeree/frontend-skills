@@ -5,6 +5,39 @@ Kelly's activity log for the AWESOMEREE Web App. Entries are organized by work s
 **Session ID Convention**: Use `MMDD-N` format (e.g., `0219-1`) where MMDD is the date and N is the session number for that day.
 
 ---
+### Session 0318-1 (2026-03-18)
+
+**feat: Job Cycle CA — Full Feature Build + Fixes + PR to Main**
+
+- **Repo/branch**: `awesomeree-web-app`
+- **Ticket**: AW-382 (Job Cycle Tab — Competitive Analysis Page)
+- **What was built**: Complete Job Cycle tracking page under Analytics → Competitive Analysis → Job Cycle tab
+  - Cycle cards (horizontal scroll) with stats, progress bar
+  - Editable # field (save on blur/Enter, green/red flash)
+  - Done checkbox, Skip (×) button, Add Row, Generate Cycle
+  - Audit trail: all actions (edit #, Done, Skip, Add Row) logged to `history_logs`
+  - History popover on hover (who changed what/when)
+  - Show/hide skipped rows toggle (eye icon in SKIP header)
+  - Skipped rows: strikethrough, grayed out, read-only
+- **UI fixes during session**:
+  - Darkened popover text for readability (#6B6560 → #3D3A37)
+  - Popover z-[200] to overlay other elements
+  - Done rows: replaced `opacity-60` with bg tint (fixed faded popover on Cycle 17)
+  - Dropdown: removed VIP, 5001-6250, 6251-7500 from Add Row options
+- **Bug fixes**:
+  - `executeQuery` → `execute` (correct export from mysql-allbots.ts — was causing 500 on Add Row & Generate Cycle)
+  - Popover now shows "Created by..." for `create_row` audit entries
+  - Fallback: if no specific action history exists, shows `create_row` entry
+  - `update_hidden` popover now shows "Visible → Hidden" instead of wrong Done branch
+- **Branches & PRs**:
+  - `feature/Job-Cycle-CA-final` → test (PR #683, merged)
+  - `fix/job-cycle-dropdown` → test (PR #685, dropdown fix)
+  - `feature/job-cycle-ca-to-main` → main (all changes squashed + all fixes, PR created)
+- **DB check**: Verified `job_cycle_ca` and `history_logs` tables exist in production AllBots database — no 500 risk on main merge
+- **Files**: 10 files (9 new + 1 modified nav), ~1117 lines added
+- **Status**: PR to main pushed with all fixes. Test branch missing latest bug fixes (executeQuery, popover).
+
+---
 ### Session 0317-1 (2026-03-17)
 
 **Fix: HTTP 500 on VVIP/SG + Column Cleanup + Column Reorder**

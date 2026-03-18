@@ -7,6 +7,27 @@ Errors encountered during development and how they were resolved. Prevents repea
 **Session ID Convention**: Use `MMDD-N` format (e.g., `0219-1`) matching WORKLOG sessions.
 
 ---
+### Session 0318-1 (2026-03-18)
+
+**Error: `executeQuery is not a function` — 500 on Add Row & Generate Cycle**
+- **Symptom**: Clicking Add Row or Generate Cycle threw `(0, __lib_services_mysql_allbots__WEBPACK_IMPORTED_MODULE_2__.executeQuery) is not a function`
+- **Root cause**: `mysql-allbots.ts` exports `execute`, not `executeQuery`. Both `route.ts` (POST) and `generate/route.ts` imported the wrong name.
+- **Fix**: Changed `import { query, executeQuery }` → `import { query, execute }` and `await executeQuery(` → `await execute(` in both files.
+- **Prevention**: Always check the actual exports of a module before importing. Use IDE autocomplete or read the file.
+
+**Error: Popover text faded/washed out on Cycle 17 rows**
+- **Symptom**: History popover on Cycle 17 (done rows) had barely readable text, while Cycle 18 popover was crisp.
+- **Root cause**: Done rows had `opacity-60` on the `<tr>`. CSS opacity on a parent cannot be overridden by children — the popover inherited the 60% opacity.
+- **Fix**: Replaced `opacity-60` with `bg-[#F4F3EE] text-[#B0AEA5]` (background tint + muted text color). Popover now renders at full opacity.
+- **Prevention**: Never use `opacity` on parent elements that contain absolutely-positioned children (popovers, dropdowns). Use background color and text color instead.
+
+**Error: Add Row audit trail showed "No changes recorded"**
+- **Symptom**: After adding a new row, hovering on # cell showed "No changes recorded" even though `create_row` was logged.
+- **Root cause**: `CellWithHistory` filtered strictly by `filterAction` (e.g., `update_count`). Since a new row has no `update_count` entry yet, the filter returned empty → "No changes recorded". The `create_row` entry was ignored.
+- **Fix**: Added fallback — if no entries match `filterAction`, fall back to `create_row` entry: `data.find((e) => e.action === "create_row") ?? null`
+- **Prevention**: When adding new audit action types, always check if existing UI components can display them.
+
+---
 ### Session 0317-1 (2026-03-17)
 
 **Error: HTTP 500 on VVIP and SG comp analysis pages**
