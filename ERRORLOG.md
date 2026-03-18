@@ -445,3 +445,39 @@ Errors encountered during development and how they were resolved. Prevents repea
 
 -->
 
+
+### Session 0317-1 (2026-03-17)
+
+- **Error**: Branch `fix/http-500-vvip-sg-queries` not found in initial clone path (`Documents/Playground` clones).
+- **Discovered by**: Claude Code during branch scan.
+- **Root cause**: Active branch existed in a different local clone (`C:\Users\User\Documents\GitHub\AWESOMEREE-WEB-APP`).
+- **Impact**: Investigation started against wrong clone set; delayed RCA.
+- **Resolution**: Enumerated all local clones, located correct repo, resumed investigation there.
+- **Prevention**: For branch-specific requests, always run full multi-clone branch discovery first.
+- **Status**: RESOLVED
+
+---
+
+### Session 0317-1 (2026-03-17)
+
+- **Error**: `git` operations blocked by safe-directory ownership checks on workspace repos.
+- **Discovered by**: Claude Code (`fatal: detected dubious ownership in repository`).
+- **Root cause**: Sandbox execution user SID differs from repository owner SID.
+- **Impact**: Could not run status/add/commit until trust config updated.
+- **Resolution**: Added safe-directory entries via elevated `git config --global --add safe.directory ...`.
+- **Prevention**: Run `git status` at start of end-session workflow; if ownership mismatch appears, resolve safe-directory immediately.
+- **Status**: RESOLVED
+
+---
+
+### Session 0317-1 (2026-03-17)
+
+- **Error**: Remote branch checks failed in non-elevated command context (`schannel ... SEC_E_NO_CREDENTIALS`).
+- **Discovered by**: Claude Code during `git ls-remote`.
+- **Root cause**: Credential context not available to non-elevated sandboxed git network call.
+- **Impact**: Could not confirm remote branch names until retried.
+- **Resolution**: Re-ran branch discovery with escalation and completed remote verification.
+- **Prevention**: If remote git auth fails in sandbox, retry once with approved escalation.
+- **Status**: RESOLVED
+
+---

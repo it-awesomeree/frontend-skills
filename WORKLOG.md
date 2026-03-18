@@ -682,3 +682,26 @@ The Replacement & Review form (`/customer-service/replacement-review`) had no pr
   - `a031942` — add on the pagination inside the bottom
 - **Remaining TODO**: Connection pooling (`dbPool.executeWithRetry()`), auto-scroll to latest message, column sorting, product context display, mark as resolved action, real-time updates / auto-refresh
 
+
+### Session 0317-1 (2026-03-17)
+
+**Branch/Scope**: `fix/http-500-vvip-sg-queries` root-cause investigation for:
+- `/analytics/table/shopee-sg`
+- `/analytics/table/shopee-my-vvip`
+
+**What was done**:
+- Compared SG/VVIP behavior across `test`, `http-500---test`, `FILTER-DATE-ISSUE-FOLLOW-STRICTLY`, and `fix/http-500-vvip-sg-queries`.
+- Traced API failure path to products routes returning `Database query failed` when repository query throws.
+- Verified committed branch logic still used expensive join patterns in the live grouped query path.
+- Executed AllBots SQL timing checks to reproduce production-like behavior:
+  - SG old grouped join shape: ~15.2s
+  - VVIP old grouped join shape: ~29.5s
+  - VVIP grouped summary subquery: max statement execution timeout
+  - Indexed `cd.our_item_id_extracted` equivalents: ~0.10s to ~0.15s
+- Confirmed user-visible HTTP 500 is caused by backend query timeout risk in SG/VVIP repository fetch flow.
+
+**Tools used**: `git` (`branch`, `log`, `blame`, `diff`, `show`), MySQL MCP query profiling, cross-clone repository inspection.
+
+**Decision/Outcome**:
+- Primary root cause is slow join strategy in committed query path (not frontend rendering).
+- Summary fast-path status is secondary to the live query timeout behavior.
