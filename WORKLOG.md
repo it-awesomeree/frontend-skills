@@ -5,6 +5,60 @@ Kelly's activity log for the AWESOMEREE Web App. Entries are organized by work s
 **Session ID Convention**: Use `MMDD-N` format (e.g., `0219-1`) where MMDD is the date and N is the session number for that day.
 
 ---
+### Session 0319-1 (2026-03-19)
+
+**fix: Job Cycle History Logs — Investigation + Fix + PR to Main**
+
+- **Repo/branch**: `awesomeree-web-app`
+- **Ticket**: AW-382 (Job Cycle Tab — Competitive Analysis Page)
+- **Issue reported**: History logs not showing when editing #, Done, Add Row, Skip in Cycle 17/18/19. Some rows in Cycle 17 worked, others showed "No changes recorded".
+- **Root cause investigation**:
+  1. **Fire-and-forget logging**: `logApiAction(request, {...}).catch(() => {})` was not awaited — App Engine terminates function before async log INSERT completes. Worked on localhost (Node.js keeps event loop alive), failed on staging/production.
+  2. **create_row timezone bug**: `toString().startsWith(job_date)` failed because DB returns `"2026-02-15T16:00:00Z"` (UTC) but input is `"2026-02-16"` (local date). Match always failed → no create_row log ever written.
+  3. **Cycle 17 seeded data**: Rows 9-23 had counts pre-set in migration SQL, never edited via UI → no history expected (not a bug).
+  4. **Staging deployment**: `deploy-test.yml` uses `GCP_PROJECT_ID` while staging site (`test-dot-deeptest-449907.appspot.com`) runs on `GCP_PROJECT_ID_PROD` — auto-deploy may go to different project. Need "Quick Deploy: Test" workflow for correct deployment.
+- **Fixes applied (3 PRs merged to test)**:
+  - PR #688 (`fix/job-cycle-log-history`): Changed all `logApiAction` to `await`, added Date column hover for `create_row`, proper `update_hidden` display
+  - PR #692 (Codex `codex/job-cycle-log-hardening`): Used `insertId` instead of broken `toString().startsWith()`, added no-change guard, input validation, 404 handling
+  - Additional commit: single-field patch enforcement, strict boolean validation
+- **PR to main**: Created `feature/job-cycle-ca-production` branch from main, cherry-picked all 7 Job Cycle commits (10 files, zero conflicts). PR created.
+- **Code review**: Reviewed all 10 files as senior developer. Identified 6 potential issues, narrowed to 3 real ones (no un-skip, rapid edit rollback, no hover cache) — none are blockers for production.
+- **Jira**: Drafted comment for AW-382 noting Payment per-row column skipped per manager's decision + extra features (audit trail, add row, show/hide skipped, no-change guard, input validation).
+- **Status**: PR to main ready for Agnes's review. Staging deployment pending "Quick Deploy: Test" trigger.
+
+---
+### Session 0319-2 (2026-03-19)
+
+**fix(AW-383): Add database index and improve duplicate check on Replacement & Review**
+
+- **Repo/branch**: `awesomeree-web-app`
+- **Ticket**: AW-383 (parent: AW-384 Replacement & Review)
+- **What was done**:
+  - Investigated ticket requirements — 4 issues from AW-357 review
+  - **PR 1 (migration)**: `fix/AW-383-replacement-review-dedup` → test (PR #694, merged)
+    - Added `created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP` column
+    - Backfilled 1,152+ existing rows with `COALESCE(last_updated, case_date, NOW())`
+    - Added composite index `idx_order_dedup(order_id, platform, shop_name, created_at)`
+  - **PR 2 (code)**: `fix/AW-383-replacement-review-code` → test (pushed, PR pending)
+    - Updated `createReplacementReviewAtomic()` — composite key + `created_at` + NULL-safe `<=>`
+    - Deleted dead code: `checkRecentDuplicate()`, `createReplacementReviewBasic()`
+    - Deleted `__tests__/lib/replacement-review.test.ts`
+  - **PR 3 (to main)**: `fix/AW-383-to-main` → main (PR created)
+    - Cherry-picked both commits (migration + code)
+  - Migration auto-applied on `webapp_test` — verified via `information_schema`
+- **Files changed (4)**:
+  - `migrations/request/20260319110033_add_index_and_created_at_replacement_review.sql` (new)
+  - `migrations/request/atlas.sum` (+1 line)
+  - `lib/replacement-review.ts` (+8, -71 lines)
+  - `__tests__/lib/replacement-review.test.ts` (deleted)
+- **Before/After**:
+  - Full table scan → composite index lookup
+  - "Free Gift" false rejections → composite key allows different shops
+  - Edit-triggered false rejections → `created_at` never changes
+  - 138 lines dead code → clean
+- **Status**: PR to test pushed. PR to main created. Awaiting Agnes's approval.
+
+---
 ### Session 0318-1 (2026-03-18)
 
 **feat: Job Cycle CA — Full Feature Build + Fixes + PR to Main**

@@ -7,6 +7,27 @@ Errors encountered during development and how they were resolved. Prevents repea
 **Session ID Convention**: Use `MMDD-N` format (e.g., `0219-1`) matching WORKLOG sessions.
 
 ---
+### Session 0319-1 (2026-03-19)
+
+**Error: Job Cycle history logs not written on staging/production**
+- **Symptom**: Editing #, Done, Skip on staging site showed "No changes recorded" on hover. Some Cycle 17 rows worked (edited on localhost), others didn't.
+- **Root cause**: `logApiAction(request, {...}).catch(() => {})` was fire-and-forget. App Engine terminates the function after the response is sent, killing the async log INSERT before it completes.
+- **Fix**: Changed to `await logApiAction(request, {...}).catch(err => console.error(...))` — log completes before response is sent.
+- **Prevention**: Never use fire-and-forget for database writes on serverless platforms (App Engine, Lambda). Always `await`.
+
+**Error: create_row log never written for manually added rows**
+- **Symptom**: Adding a row via "Add Row" → hover on Date → "No changes recorded".
+- **Root cause**: `r.job_date?.toString().startsWith(job_date)` used to find the inserted row. DB returns `"2026-02-15T16:00:00.000Z"` (UTC) but input is `"2026-02-16"` (local date, UTC+8). The string never matches → `newRow` is undefined → no log.
+- **Fix**: Used `ResultSetHeader.insertId` from the INSERT result, with SQL fallback lookup `WHERE cycle=? AND job_date=? AND job_type=?`.
+- **Prevention**: Never use `toString().startsWith()` for date comparison. Use DB-level matching or proper date parsing.
+
+**Error: Staging site not updated after PR merge**
+- **Symptom**: PR #688 merged to `test`, CI/CD showed green, but staging site still ran old code.
+- **Root cause**: `deploy-test.yml` uses `secrets.GCP_PROJECT_ID` while staging site runs on `secrets.GCP_PROJECT_ID_PROD` (different project). Auto-deploy goes to wrong project.
+- **Fix**: Need to manually trigger "Quick Deploy: Test" workflow from GitHub Actions.
+- **Prevention**: Verify which GCP project the deploy workflow targets. Check staging site actually reflects the new code after deployment.
+
+---
 ### Session 0318-1 (2026-03-18)
 
 **Error: `executeQuery is not a function` — 500 on Add Row & Generate Cycle**
